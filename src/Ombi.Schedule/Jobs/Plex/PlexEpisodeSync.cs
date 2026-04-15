@@ -157,12 +157,19 @@ namespace Ombi.Schedule.Jobs.Plex
                     }
 
                     // Let's check if we have the parent
+                   // Let's check if we have the parent
                     var seriesExists = await _repo.GetByKey(episode.grandparentRatingKey);
                     if (seriesExists == null)
                     {
                         // Ok let's try and match it to a title. TODO (This is experimental)
-                        seriesExists = await _repo.GetAll().FirstOrDefaultAsync(x =>
-                            x.Title == episode.grandparentTitle);
+                        
+                        // --- START CHANGE ---
+                        // Use case-insensitive matching and trim whitespace for more reliable title matching.
+                        var trimmedTitle = episode.grandparentTitle?.Trim();
+                        seriesExists = await _repo.GetAll().FirstOrDefaultAsync(x => 
+                            !string.IsNullOrEmpty(x.Title) && x.Title.Equals(trimmedTitle, StringComparison.OrdinalIgnoreCase));
+                        // --- END CHANGE ---
+                        
                         if (seriesExists == null)
                         {
                             _log.LogWarning(
@@ -174,6 +181,7 @@ namespace Ombi.Schedule.Jobs.Plex
                         // Set the rating key to the correct one
                         episode.grandparentRatingKey = seriesExists.Key;
                     }
+
 
                     // Sanity checks
                     if (episode.index == 0)
