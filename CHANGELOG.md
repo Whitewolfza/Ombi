@@ -1,4 +1,8 @@
-# 4.59.0 (2026-04-15)
+## [4.59.1](https://github.com/Whitewolfza/Ombi/compare/v4.59.0...v4.59.1) (2026-04-17)
+
+
+
+# [4.59.0](https://github.com/Whitewolfza/Ombi/compare/c57f33151bc07819bc950675f5a0a7978ba26348...v4.59.0) (2026-04-15)
 
 
 ### Bug Fixes
