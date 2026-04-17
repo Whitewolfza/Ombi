@@ -66,6 +66,9 @@ namespace Ombi
             demoInstance.Demo = demo;
             instance.StoragePath = storagePath ?? string.Empty;
 
+            // Log database configuration on startup
+            DatabaseExtensions.LogDatabaseConfiguration();
+
             var services = new ServiceCollection();
             services.ConfigureDatabases(null);
 #pragma warning disable ASP0000 // Do not call 'IServiceCollection.BuildServiceProvider' in 'ConfigureServices'

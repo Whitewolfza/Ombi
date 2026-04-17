@@ -2,7 +2,7 @@
   "profiles": {
     "Ombi": {
       "commandName": "Project",
-      "commandLineArgs": "--host http://localhost:3577",
+      "commandLineArgs": "--host http://*:5505",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

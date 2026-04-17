@@ -142,6 +142,21 @@ namespace Ombi
 
             app.UseSpaStaticFiles(new StaticFileOptions(sharedOptions));
 
+            var provider = new FileExtensionContentTypeProvider 
+            { 
+                Mappings = 
+                { 
+                    [".map"] = "application/octet-stream",
+                    [".json"] = "application/json"
+                } 
+            };
+
+            // Serve wwwroot static files (including translations) BEFORE other middleware
+            app.UseStaticFiles(new StaticFileOptions()
+            {
+                ContentTypeProvider = provider,
+            });
+
 
             if (settings.ApiKey.IsNullOrEmpty())
             {
@@ -158,13 +173,6 @@ namespace Ombi
             ctx.Seed();
             var settingsctx = serviceProvider.GetService<SettingsContext>();
             settingsctx.Seed();
-
-            var provider = new FileExtensionContentTypeProvider { Mappings = { [".map"] = "application/octet-stream" } };
-
-            app.UseStaticFiles(new StaticFileOptions()
-            {
-                ContentTypeProvider = provider,
-            });
 
             app.UseMiddleware<ErrorHandlingMiddleware>();
             app.UseMiddleware<ApiKeyMiddlewear>();
@@ -210,7 +218,8 @@ namespace Ombi
             {
                 spa.Options.SourcePath = "ClientApp";
 #if DEBUG
-                spa.UseProxyToSpaDevelopmentServer("http://localhost:3578");
+                // Commented out - build Angular app instead: cd ClientApp && npm run build
+                // spa.UseProxyToSpaDevelopmentServer("http://localhost:3578");
 #endif
             });
 

@@ -107,6 +107,92 @@ namespace Ombi.Extensions
             return configuration;
         }
 
+        public static void LogDatabaseConfiguration()
+        {
+            try
+            {
+                var config = GetDatabaseConfiguration();
+
+                Console.WriteLine("==============================================");
+                Console.WriteLine("Database Configuration");
+                Console.WriteLine("==============================================");
+                Console.WriteLine($"Storage Path: {StartupSingleton.Instance.StoragePath}");
+                Console.WriteLine();
+
+                LogDatabaseInfo("Ombi Database", config.OmbiDatabase);
+                LogDatabaseInfo("External Database", config.ExternalDatabase);
+                LogDatabaseInfo("Settings Database", config.SettingsDatabase);
+
+                Console.WriteLine("==============================================");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error logging database configuration: {ex.Message}");
+            }
+        }
+
+        private static void LogDatabaseInfo(string dbName, PerDatabaseConfiguration config)
+        {
+            Console.WriteLine($"{dbName}:");
+            Console.WriteLine($"  Type: {config.Type}");
+
+            // Sanitize connection string to hide password
+            var sanitizedConnectionString = SanitizeConnectionString(config.ConnectionString, config.Type);
+            Console.WriteLine($"  Connection: {sanitizedConnectionString}");
+            Console.WriteLine();
+        }
+
+        private static string SanitizeConnectionString(string connectionString, string dbType)
+        {
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                return "[Not configured]";
+            }
+
+            try
+            {
+                if (dbType.Equals(SqliteDatabase, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    // For SQLite, just show the database file path
+                    var match = System.Text.RegularExpressions.Regex.Match(connectionString, @"Data Source=([^;]+)");
+                    return match.Success ? $"Data Source={match.Groups[1].Value}" : connectionString;
+                }
+                else if (dbType.Equals(MySqlDatabase, StringComparison.InvariantCultureIgnoreCase) || 
+                         dbType.Equals(PostgresDatabase, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    // For MySQL/PostgreSQL, hide password
+                    var builder = new StringBuilder();
+                    var parts = connectionString.Split(';');
+
+                    foreach (var part in parts)
+                    {
+                        var trimmedPart = part.Trim();
+                        if (trimmedPart.StartsWith("Password", StringComparison.InvariantCultureIgnoreCase) ||
+                            trimmedPart.StartsWith("Pwd", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            var keyValue = trimmedPart.Split('=');
+                            if (keyValue.Length > 0)
+                            {
+                                builder.Append($"{keyValue[0]}=****; ");
+                            }
+                        }
+                        else if (!string.IsNullOrEmpty(trimmedPart))
+                        {
+                            builder.Append($"{trimmedPart}; ");
+                        }
+                    }
+
+                    return builder.ToString().TrimEnd(' ', ';');
+                }
+            }
+            catch
+            {
+                return "[Connection string parse error]";
+            }
+
+            return connectionString;
+        }
+
 
         private static void AddSqliteHealthCheck(IHealthChecksBuilder builder, string dbName, PerDatabaseConfiguration config)
         {
